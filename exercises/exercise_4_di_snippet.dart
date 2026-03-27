@@ -371,8 +371,27 @@ class DependencyInjectionService {
 // ---------------------------------------------------
 // Write your answer here:
 //
-//
-//
+//! Solution :
+
+// registerSingleton:
+// Creates a single instance immediately and reuses it everywhere.
+// Used for global/shared services like Dio, cache, or database.
+
+
+// registerLazySingleton:
+// Creates a single instance only when it is first requested.
+// Same as singleton but improves startup performance.
+
+
+// registerFactory:
+// Creates a new instance every time it is requested.
+// Used for UI-related classes like BLoCs (each screen gets a fresh instance).
+
+
+// Problem with using BOTH lazySingleton and factory for the same type:
+// It causes inconsistent behavior (sometimes shared instance, sometimes new),
+// leading to unpredictable state, bugs, and difficult debugging.
+
 
 // QUESTION 2 [Mid]: Refactored DI code
 // ---------------------------------------------------
@@ -381,7 +400,160 @@ class DependencyInjectionService {
 // - Comments explaining singleton vs factory choice per BLoC
 //
 //
-//
+//! Solution :
+// class DependencyInjectionService {
+//   static Future<void> init() async {
+     // ── Core Services ─────────────────────────────────────────────
+//     di.registerSingleton<DioFactory>(DioFactory());
+//     di.registerSingleton<HiveManager>(HiveManager());
+
+     // ── Data Sources ──────────────────────────────────────────────
+//     di.registerLazySingleton<HomeRemoteDataSource>(
+//       () => HomeRemoteDataSource(di()),
+//     );
+//     di.registerLazySingleton<MessagesRemoteDataSource>(
+//       () => MessagesRemoteDataSource(di()),
+//     );
+//     di.registerLazySingleton<ProfileRemoteDataSource>(
+//       () => ProfileRemoteDataSource(di()),
+//     );
+
+     // ── Repositories ──────────────────────────────────────────────
+//     di.registerLazySingleton<HomeRepository>(
+//       () => HomeRepository(di()),
+//     );
+//     di.registerLazySingleton<MessagesRepository>(
+//       () => MessagesRepository(di()),
+//     );
+//     di.registerLazySingleton<ProfileRepository>(
+//       () => ProfileRepository(di()),
+//     );
+
+     // ── Use Cases (stateless → lazySingleton) ─────────────────────
+//     di.registerLazySingleton(() => FetchRoomsUC(di()));
+//     di.registerLazySingleton(() => FetchLiveRoomsUC(di()));
+//     di.registerLazySingleton(() => CreateRoomUC(di()));
+//     di.registerLazySingleton(() => FetchMessagesUC(di()));
+//     di.registerLazySingleton(() => SendMessageUC(di()));
+//     di.registerLazySingleton(() => DeleteMessageUC(di()));
+//     di.registerLazySingleton(() => FetchUserProfileUC(di()));
+//     di.registerLazySingleton(() => FetchMyProfileUC(di()));
+//     di.registerLazySingleton(() => UpdateProfileUC(di()));
+//     di.registerLazySingleton(() => FetchGiftHistoryUC(di()));
+//     di.registerLazySingleton(() => FetchUserBadgesUC(di()));
+//     di.registerLazySingleton(() => FetchMyBadgesUC(di()));
+//     di.registerLazySingleton(() => FetchCpProfileUC(di()));
+//     di.registerLazySingleton(() => FetchUserRoomsUC(di()));
+//     di.registerLazySingleton(() => FetchSupporterUC(di()));
+//     di.registerLazySingleton(() => FetchUserIntroUC(di()));
+//     di.registerLazySingleton(() => FetchReelsUC(di()));
+//     di.registerLazySingleton(() => LikeReelUC(di()));
+//     di.registerLazySingleton(() => ShareReelUC(di()));
+//     di.registerLazySingleton(() => ViewReelUC(di()));
+//     di.registerLazySingleton(() => FetchMomentsUC(di()));
+//     di.registerLazySingleton(() => InitPusherUC(di()));
+//     di.registerLazySingleton(() => SubscribeChatUC(di()));
+//     di.registerLazySingleton(() => SubscribeMessagesUC(di()));
+//     di.registerLazySingleton(() => ListenToBannersUC(di()));
+//     di.registerLazySingleton(() => ListenToGamesUC(di()));
+//     di.registerLazySingleton(() => SubscribeCounterUC(di()));
+//     di.registerLazySingleton(() => FetchConfigUC(di()));
+//     di.registerLazySingleton(() => FetchCountriesUC(di()));
+//     di.registerLazySingleton(() => UpdateFCMTokenUC(di()));
+//     di.registerLazySingleton(() => FetchLevelDataUC(di()));
+//     di.registerLazySingleton(() => InitAnalyticsUC(di()));
+//     di.registerLazySingleton(() => FetchWalletUC(di()));
+
+     // ── BLoCs (factory → per screen instance) ─────────────────────
+
+//     di.registerFactory(() => HomeBloc(di(), di())); // UI state → new per screen
+//     di.registerFactory(() => CreateRoomBloc(di())); // short-lived
+//     di.registerFactory(() => MessagesBloc(di(), di())); // chat per screen
+//     di.registerFactory(() => DeleteMessageBloc(di())); // action-based
+
+//     di.registerFactory(() => GiftHistoryBloc(giftHistoryUseCase: di()));
+//     di.registerFactory(() => GetBadgesBloc(
+//           getBadgesUseCase: di(),
+//           getMyAllBadgeUC: di(),
+//         ));
+//     di.registerFactory(() => UserBadgesBloc(uc: di()));
+//     di.registerFactory(() => GetUserBadgesBloc(uc: di()));
+//     di.registerFactory(() => CpProfileBloc(uc: di()));
+//     di.registerFactory(() => GetUserRoomsBloc(uc: di()));
+//     di.registerFactory(() => GetSupporterBloc(uc: di()));
+//     di.registerFactory(() => GetUserIntroBloc(uc: di()));
+//     di.registerFactory(() => GetReelsBloc(di(), di(), di(), di()));
+//     di.registerFactory(() => ReelViewerBloc(di()));
+//     di.registerFactory(() => MomentBloc(di()));
+
+     // ── God Bloc Properly Split FetchUserDataBloc ─────────────────
+// Registered as factory to ensure a fresh instance per usage context
+
+
+// ── 1. User Domain ─────────────────────────────────────────────
+// Handles: profile, badges, level, intro, CP profile
+
+// di.registerFactory(() => UserBloc(
+//       di(), // FetchMyProfileUC
+//       di(), // FetchUserProfileUC
+//       di(), // FetchUserBadgesUC
+//       di(), // FetchMyBadgesUC
+//       di(), // FetchLevelDataUC
+//       di(), // FetchUserIntroUC
+//       di(), // FetchCpProfileUC
+// ));
+
+
+// ── 2. Realtime / Socket Domain ───────────────────────────────
+// Handles: pusher, chat, banners, games, counters
+
+// di.registerFactory(() => RealtimeBloc(
+//       di(), // InitPusherUC
+//       di(), // SubscribeChatUC
+//       di(), // SubscribeMessagesUC
+//       di(), // ListenToBannersUC
+//       di(), // ListenToGamesUC
+//       di(), // SubscribeCounterUC
+// ));
+
+
+// ── 3. App Configuration Domain ───────────────────────────────
+// Handles: app config + countries
+
+// di.registerFactory(() => AppConfigBloc(
+//       di(), // FetchConfigUC
+//       di(), // FetchCountriesUC
+// ));
+
+
+// ── 4. Wallet & Monetization Domain ───────────────────────────
+// Handles: wallet, gifts, supporters
+
+// di.registerFactory(() => WalletBloc(
+//       di(), // FetchWalletUC
+//       di(), // FetchGiftHistoryUC
+//       di(), // FetchSupporterUC
+// ));
+
+
+// ── 5. Room/User Relations Domain ─────────────────────────────
+// Handles: user rooms
+
+// di.registerFactory(() => UserRoomsBloc(
+//       di(), // FetchUserRoomsUC
+// ));
+
+
+// ── 6. Analytics & Notifications Domain ───────────────────────
+// Handles: analytics + FCM token
+
+// di.registerFactory(() => AnalyticsBloc(
+//       di(), // InitAnalyticsUC
+//       di(), // UpdateFCMTokenUC
+// ));
+//   }
+// }
+
 
 // QUESTION 3 [Senior]: Modular DI architecture + god-class refactor
 // ---------------------------------------------------
@@ -391,4 +563,180 @@ class DependencyInjectionService {
 // c) Draw a simple dependency diagram (ASCII art is fine)
 //
 //
+//! Solution :
+// a) Split DI into modules (feature-based)
+
+// Future<void> init() async {
+//  await initCore();          // global services (Dio, storage, etc.)
+//  await initAuthFeature();   // login/register
+//  await initHomeFeature();   // rooms listing, reels
+//  await initRoomFeature();   // live room (your main screen)
+//  await initChatFeature();   // chat system
+//  await initProfileFeature(); // user profile
+// }
+
+
+
+// ---------------- CORE ----------------
+// Future<void> initCore() async {
+//   di.registerSingleton(DioFactory());      // API client (shared globally)
+//   di.registerSingleton(HiveManager());     // local cache
+// }
+
+
+// ---------------- ROOM FEATURE  ----------------
+// Future<void> initRoomFeature() async {
+  // Data Sources
+  // di.registerLazySingleton(() => PusherRemoteDataSource(/* socket */));
+
+  // Repository
+  // di.registerLazySingleton(() => PusherRepository(di()));
+
+  // UseCases
+  // di.registerLazySingleton(() => InitPusherUC(di()));
+  // di.registerLazySingleton(() => SubscribeChatUC(di()));
+  // di.registerLazySingleton(() => SubscribeMessagesUC(di()));
+  // di.registerLazySingleton(() => ListenToBannersUC(di()));
+  // di.registerLazySingleton(() => ListenToGamesUC(di()));
+  // di.registerLazySingleton(() => SubscribeCounterUC(di()));
+
+  // Bloc
+//   di.registerFactory(() => RealtimeBloc(
+//         di(), di(), di(), di(), di(), di(),
+//       ));
+// }
+
+
+
+
+// b) Split FetchUserDataBloc into smaller BLoCs:
+
+// 1. UserBloc
+// Handles: profile data, badges, level, intro, CP profile
+// Example: When opening profile sheet in room
+// → only UserBloc is used
+
+// 2. RealtimeBloc
+// Handles: live updates (chat, banners, games, counters)
+// Example: In RoomScreenMini → listens to socket events
+
+// 3. ChatBloc
+// Handles: sending/receiving messages
+// Example: chat list + sending message
+
+// 4. WalletBloc
+// Handles: wallet balance, gifts, supporters
+// Example: sending gifts in live room
+
+// 5. AppConfigBloc
+// Handles: countries + app config
+// Example: used once at app start
+
+// 6. AnalyticsBloc
+// Handles: analytics + FCM token
+// Example: track user session in room
+
+
+
+
+// c) Dependency Diagram:
+
+// ============================ UI LAYER ============================
 //
+// RoomScreenMini / HomePage / ProfilePage
+//        |
+//        v
+
+// ============================ BLOC LAYER ==========================
+/*
+ ┌────────────────────────────────────────────────────────────────────-┐
+ │                            PRESENTATION                             │
+ ├────────────────────────────────────────────────────────────────────-┤
+ │                                                                     │
+ │   UserBloc            RealtimeBloc          WalletBloc              │
+ │   --------            ------------          -----------             │
+ │   profile             chat stream           wallet balance          │
+ │   badges              banners               gift history            │
+ │   level               games                 supporters              │
+ │   intro               counters                                      │
+ │                                                                     │
+ │   ChatBloc            AppConfigBloc         AnalyticsBloc           │
+ │   --------            -------------         -------------           │
+ │   messages            config                analytics               │
+ │   send message        countries             FCM token               │
+ │                                                                     │
+ └───────────────┬───────────────┬───────────────┬────────────────────-┘
+                 │               │               │
+
+
+ ============================ USE CASE LAYER ======================
+                 │
+                 v
+
+ ┌────────────────────────────────────────────────────────────────────┐
+ │                            DOMAIN                                  │
+ ├────────────────────────────────────────────────────────────────────┤
+ │                                                                    │
+ │ FetchMyProfileUC        InitPusherUC         FetchWalletUC         │
+ │ FetchUserProfileUC      SubscribeChatUC      FetchGiftHistoryUC    │
+ │ FetchUserBadgesUC       SubscribeMessagesUC  FetchSupporterUC      │
+ │ FetchMyBadgesUC         ListenToBannersUC                          │
+ │ FetchLevelDataUC        ListenToGamesUC                            │
+ │ FetchUserIntroUC        SubscribeCounterUC                         │
+ │ FetchCpProfileUC        FetchConfigUC                              │
+ │ FetchUserRoomsUC        FetchCountriesUC                           │
+ │ InitAnalyticsUC         UpdateFCMTokenUC                           │
+ │                                                                    │
+ └───────────────┬───────────────────────────────┬────────────────────┘
+                 │                               │
+
+
+ ============================ REPOSITORY LAYER ====================
+                 │
+                 v
+
+ ┌────────────────────────────────────────────────────────────────────┐
+ │                            DATA                                    │
+ ├────────────────────────────────────────────────────────────────────┤
+ │                                                                    │
+ │ ProfileRepository        PusherRepository        HomeRepository    │
+ │ MessagesRepository       (Realtime)                                │
+ │                                                                    │
+ └───────────────┬───────────────────────────────┬────────────────────┘
+                 │                               │
+
+
+ ============================ DATA SOURCE =========================
+                 │
+                 v
+
+ ┌────────────────────────────────────────────────────────────────────┐
+ │                        DATA SOURCES                                │
+ ├────────────────────────────────────────────────────────────────────┤
+ │                                                                    │
+ │ ProfileRemoteDS        PusherRemoteDS        HomeRemoteDS          │
+ │ MessagesRemoteDS                                                   │
+ │                                                                    │
+ └───────────────┬───────────────────────────────┬────────────────────┘
+                 │                               │
+
+
+ ============================ EXTERNAL ============================
+                 │
+                 v
+
+ ┌────────────────────────────────────────────────────────────────────┐
+ │                        EXTERNAL SERVICES                           │
+ ├────────────────────────────────────────────────────────────────────┤
+ │ DioFactory (API)         WebSocket/Pusher        Local Storage     │
+ │                                                                    │
+ └────────────────────────────────────────────────────────────────────┘
+*/
+
+
+// Lazy loading strategy:
+// Initialize feature DI only when opening that feature.
+
+
+// Testability:
+// Smaller BLoCs → fewer dependencies → easier unit testing and mocking.
