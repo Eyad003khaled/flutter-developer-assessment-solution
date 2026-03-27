@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 2000 2000">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #0f0c60;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #231f20;
+        stroke-miterlimit: 10;
+        stroke-width: .8px;
+      }
+    </style>
+  </defs>
+  <!-- Generator: Adobe Illustrator 28.7.5, SVG Export Plug-In . SVG Version: 1.2.0 Build 176)  -->
+  <g>
+    <g id="Layer_1">
+      <g id="Layer_1-2" data-name="Layer_1">
+        <path class="cls-2" d="M926.1,1041.2"/>
+        <path class="cls-2" d="M894,1041.2"/>
+        <g>
+          <g>
+            <path class="cls-1" d="M1254.2,738.9l111.4,64.2h246.7c75.5,0,109.2,40.4,109.2,111.9s-33.7,111.4-109.2,111.4h-246.7v-146.5h-111.4v210.7h375.1c122.7,0,207.1-46.3,207.1-175.7s-84.5-176.1-207.1-176.1h-375.1Z"/>
+            <path class="cls-1" d="M274.9,738.7h-111.4v268.7c0,14.8,0,47.6,26.1,66,22.9,16.2,62,17.1,92.6,17.1h302.8c31,0,69.6-.9,93-17.1,26.1-18.4,26.1-51.2,26.1-66v-268.7h-111.4v287.5h-317.6v-287.5h-.2Z"/>
+            <polygon class="cls-1" points="1034.1 802.9 1254.2 802.9 1254.2 738.7 702.5 738.7 702.5 802.9 922.7 802.9 922.7 1090.5 1034.1 1090.5 1034.1 802.9"/>
+          </g>
+          <path class="cls-1" d="M360,1261.3s600-152,1280,0c0,0-716-77.3-1280,0Z"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

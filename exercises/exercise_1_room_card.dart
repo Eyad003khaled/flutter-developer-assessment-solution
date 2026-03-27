@@ -25,7 +25,11 @@
 // - Consider edge cases (null data, long text, missing images)
 // =============================================================================
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:shimmer/shimmer.dart';
 
 // ---------------------------------------------------------------------------
 // DATA MODEL (do not modify)
@@ -102,15 +106,26 @@ final sampleRooms = [
 // ---------------------------------------------------------------------------
 
 class RoomCardList extends StatelessWidget {
+  const RoomCardList({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Rooms')),
-      body: ListView(
-        // BUG: Should use ListView.builder for performance
-        children: sampleRooms.map((room) => RoomCard(room: room)).toList(),
-      ),
-    );
+        appBar: AppBar(title: Text('Rooms')),
+        body:
+            //  ListView(
+            // BUG: Should use ListView.builder for performance
+            //   children: sampleRooms.map((room) => RoomCard(room: room)).toList(),
+            // ),
+
+            //! Solution: Use ListView.builder for better performance with large lists
+            ListView.builder(
+          itemCount: sampleRooms.length,
+          itemBuilder: (context, index) {
+            final room = sampleRooms[index];
+            return RoomCard(room: room);
+          },
+        ));
   }
 }
 
@@ -118,104 +133,171 @@ class RoomCard extends StatelessWidget {
   final RoomEntity room;
 
   // BUG: Missing const constructor
-  RoomCard({required this.room});
+  //  RoomCard({required this.room});
+  //! Solution: Add const constructor for better performance and immutability
+  const RoomCard({super.key, required this.room});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      // BUG: Hardcoded margin and dimensions
-      margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      padding: EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey,
-            blurRadius: 2,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // --- Cover Image ---
-          // BUG: No loading state, no error handling, no placeholder
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              image: DecorationImage(
-                // BUG: Will crash if coverUrl is null
-                image: NetworkImage(room.coverUrl!),
-                fit: BoxFit.cover,
-              ),
+    //! Solution: Add RepaintBoundary to isolate repaints for better performance
+    return RepaintBoundary(
+      child: Container(
+        // BUG: Hardcoded margin and dimensions
+        //  margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        //! Solution: Use responsive sizing with flutter_screenutil
+        margin: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+        padding: EdgeInsets.all(5.w),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(5.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey,
+              blurRadius: 2,
+              offset: Offset(0, 1),
             ),
-            child: room.isLive
-                ? Positioned(
+          ],
+        ),
+        child: Row(
+          children: [
+            // --- Cover Image ---
+            // BUG: No loading state, no error handling, no placeholder
+            // Container(
+            // width: 80,
+            // height: 80,
+            // decoration: BoxDecoration(
+            //   borderRadius: BorderRadius.circular(8),
+            //   image: DecorationImage(
+            //     // BUG: Will crash if coverUrl is null
+            //     image: NetworkImage(room.coverUrl!),
+            //     fit: BoxFit.cover,
+            //   ),
+            // ),
+            SizedBox(
+              width: 80.w,
+              height: 80.h,
+              // decoration: BoxDecoration(
+              //   borderRadius: BorderRadius.circular(8),
+              //   image: DecorationImage(
+              // BUG: Will crash if coverUrl is null
+              //     image: NetworkImage(room.coverUrl!),
+              //     fit: BoxFit.cover,
+              //   ),
+              // ),
+              child: Stack(children: [
+                //! Solution: Use CachedNetworkImage for better performance and built-in loading/error handling
+                CachedImage(
+                  imageUrl: room.coverUrl,
+                  width: 80.w,
+                  height: 80.w,
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                //! Solution: Place Positioned inside Stack
+
+                if (room.isLive)
+                  Positioned(
                     // BUG: Positioned outside of Stack
                     top: 0,
                     left: 0,
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
                       decoration: BoxDecoration(
                         color: Colors.red,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Text(
                         'LIVE',
-                        style: TextStyle(color: Colors.white, fontSize: 8),
+                        style:
+                            TextStyle(color: AppColors.white, fontSize: 8.sp),
                       ),
                     ),
                   )
-                : null,
-          ),
-          // BUG: No spacing between image and text
-          // --- Room Info ---
-          Column(
-            // BUG: Column not wrapped in Expanded, will overflow
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Row 1: Room Name + Visitor Count
-              Row(
+              ]),
+            ),
+            // BUG: No spacing between image and text
+            //! Solution: Add spacing
+            SizedBox(width: 10.w),
+            // --- Room Info ---
+            //! Solution: Wrap Column with Expanded to prevent overflow and allow flexible width
+            Expanded(
+              child: Column(
+                // BUG: Column not wrapped in Expanded, will overflow
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // BUG: Text will overflow on long names
-                  Text(
-                    room.roomName,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
+                  // Row 1: Room Name + Visitor Count
+                  Row(
+                    children: [
+                      // BUG: Text will overflow on long names
+                      // Text(
+                      //   room.roomName,
+                      //   style: TextStyle(
+                      //     fontSize: 14,
+                      //     fontWeight: FontWeight.w600,
+                      //     color: Colors.black,
+                      //   ),
+                      // ),
+                      //! Solution: Add Expanded + overflow handling
+
+                      Expanded(
+                        child: Text(
+                          room.roomName ?? "",
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.black,
+                          ),
+                        ),
+                      ),
+                      // BUG: No spacing
+
+                      //! Solution: Add spacing
+                      SizedBox(width: 6.w),
+                      _VisitorCount(count: room.visitorsCount),
+                    ],
                   ),
-                  // BUG: No spacing
-                  _VisitorCount(count: room.visitorsCount),
+                  // Row 2: Room Intro
+                  Text(
+                    // BUG: Will show "null" if roomIntro is null
+                    //  room.roomIntro.toString(),
+                    //! Solution: Handle null case gracefully
+                    room.roomIntro ?? "",
+                    //! Solution: Add maxLines and overflow handling to prevent layout issues with long intros
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppColors.greyText,
+                    ),
+                    // BUG: No maxLines or overflow handling
+                  ),
+                  // Row 3: Country + Lock icon
+                  Row(
+                    children: [
+                      // BUG: Will show "null" text if no country flag
+                      // Text(room.countryFlag.toString(),
+                      //     style: TextStyle(fontSize: 16)),
+                      //! Solution: Conditional rendering
+                      if (room.countryFlag != null)
+                        Text(
+                          room.countryFlag!,
+                          style: TextStyle(fontSize: 16.sp),
+                        ),
+                      // BUG: No spacing
+                      //! Solution: Add spacing
+                      if (room.countryFlag != null && room.hasPassword)
+                        SizedBox(width: 6.w),
+                      if (room.hasPassword)
+                        Icon(Icons.lock, size: 14, color: AppColors.primary),
+                    ],
+                  ),
                 ],
               ),
-              // Row 2: Room Intro
-              Text(
-                // BUG: Will show "null" if roomIntro is null
-                room.roomIntro.toString(),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFFa5a7a4),
-                ),
-                // BUG: No maxLines or overflow handling
-              ),
-              // Row 3: Country + Lock icon
-              Row(
-                children: [
-                  // BUG: Will show "null" text if no country flag
-                  Text(room.countryFlag.toString(), style: TextStyle(fontSize: 16)),
-                  // BUG: No spacing
-                  if (room.hasPassword)
-                    Icon(Icons.lock, size: 14, color: Color(0xFF32e5ac)),
-                ],
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -225,7 +307,17 @@ class _VisitorCount extends StatelessWidget {
   final int count;
 
   // BUG: Missing const, missing key
-  _VisitorCount({required this.count});
+  //  _VisitorCount({required this.count});
+  //! Solution: Add const constructor for better performance and immutability
+  const _VisitorCount({required this.count});
+  String formatCount(int count) {
+    if (count >= 1000000) {
+      return '${(count / 1000000).toStringAsFixed(1)}M';
+    } else if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(1)}K';
+    }
+    return count.toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -236,9 +328,11 @@ class _VisitorCount extends StatelessWidget {
         SizedBox(width: 2),
         Text(
           // BUG: Should format large numbers (1234 → 1.2K)
-          count.toString(),
+          //count.toString(),
+          //! Solution: Format large numbers for better readability
+          formatCount(count),
           style: TextStyle(
-            fontSize: 10,
+            fontSize: 10.sp,
             color: Colors.grey,
           ),
         ),
@@ -258,4 +352,76 @@ class AppColors {
   static const primary = Color(0xFF32e5ac);
   static const shimmerBase = Color(0xFFE0E0E0);
   static const shimmerHighlight = Color(0xFFF5F5F5);
+}
+
+// Reusable Widgets and utilities
+class CachedImage extends StatelessWidget {
+  final String? imageUrl;
+  final double? width;
+  final double? height;
+  final BoxFit fit;
+  final String errorAsset;
+  final BorderRadius? borderRadius;
+
+  const CachedImage({
+    super.key,
+    required this.imageUrl,
+    this.width,
+    this.height,
+    this.fit = BoxFit.cover,
+    this.errorAsset = 'assets/images/svg/utd-logo.svg',
+    this.borderRadius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    /// 🔒 Handle null or empty URL early
+    if (imageUrl == null || imageUrl!.trim().isEmpty) {
+      return _buildErrorImage();
+    }
+
+    Widget image = CachedNetworkImage(
+      imageUrl: imageUrl!,
+
+      width: width,
+      height: height,
+      fit: fit,
+
+      /// 🔄 Loading
+      placeholder: (context, url) => Shimmer.fromColors(
+        baseColor: AppColors.shimmerBase,
+        highlightColor: AppColors.shimmerHighlight,
+        child: Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            color: AppColors.shimmerBase,
+            borderRadius: borderRadius ?? BorderRadius.circular(0),
+          ),
+        ),
+      ),
+
+      /// ❌ Error
+      errorWidget: (context, url, error) => _buildErrorImage(),
+    );
+
+    if (borderRadius != null) {
+      return ClipRRect(
+        borderRadius: borderRadius!,
+        child: image,
+      );
+    }
+
+    return image;
+  }
+
+  /// 🧱 Fallback widget
+  Widget _buildErrorImage() {
+    return SvgPicture.asset(
+      errorAsset,
+      width: width,
+      height: height,
+      fit: fit,
+    );
+  }
 }
