@@ -26,9 +26,9 @@
 // - Consider error handling, edge cases, and performance
 // =============================================================================
 
+import 'package:dartz/dartz.dart' hide State;
 import 'package:flutter/material.dart';
 import 'package:equatable/equatable.dart';
-import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 // ---------------------------------------------------------------------------
@@ -257,6 +257,8 @@ class RoomListState extends Equatable {
     int? lastPage,
     int? popularIndex,
     int? globalIndex,
+      ScrollController? scrollController, // <-- added
+
   }) {
     return RoomListState(
       status: status ?? this.status,
@@ -265,9 +267,12 @@ class RoomListState extends Equatable {
       currentPage: currentPage ?? this.currentPage,
       lastPage: lastPage ?? this.lastPage,
       // ⚠️ SUBTLE BUG: These two are swapped (mirrors real codebase bug)
-      popularIndex: globalIndex ?? this.popularIndex,
-      globalIndex: popularIndex ?? this.globalIndex,
-      scrollController: scrollController,
+      // popularIndex: globalIndex ?? this.popularIndex,
+      // globalIndex: popularIndex ?? this.globalIndex,
+    //!Solution: Fix swapped Parameters
+    popularIndex: popularIndex ?? this.popularIndex,
+    globalIndex: globalIndex ?? this.globalIndex,
+      scrollController: scrollController ?? this.scrollController,
     );
   }
 
@@ -302,17 +307,33 @@ class RoomListBloc extends Bloc<RoomListEvent, RoomListState> {
     // BUG 1: Doesn't emit loading state before making API call
     // BUG 2: Always passes page: 1, doesn't reset pagination state
 
+  //!Solution: Emit loading first
+  emit(state.copyWith(
+    status: RequestState.loading,
+    currentPage: 1, 
+    //!Solution: Reset currentPage to 1
+  ));
+
     final result = await _fetchRoomsUC(RoomParams(page: 1));
     result.fold(
       (left) => emit(state.copyWith(
         status: RequestState.error,
         // BUG 3: Doesn't store the error message
+        //!Solution: Store the error message and set proper status
+        errorMessage: NetworkExceptions.getErrorMessage(left),
+        rooms: [],
       )),
       (right) => emit(state.copyWith(
         // BUG 4: Doesn't use handleLoadedResponse — always sets loaded even if empty
-        status: RequestState.loaded,
-        rooms: right.data,
+        // status: RequestState.loaded,
+        // rooms: right.data,
+        //!Solution: Determine loaded vs empty dynamically
+      status: handleLoadedResponse(right.data),
+      rooms: right.data ?? [],
         // BUG 5: Doesn't store pagination metadata (lastPage)
+         //!Solution: Store lastPage from response
+      currentPage: right.paginates?.currentPage ?? 1,
+      lastPage: right.paginates?.lastPage ?? -1,
       )),
     );
   }
@@ -327,6 +348,35 @@ class RoomListBloc extends Bloc<RoomListEvent, RoomListState> {
     // 3. Fetch next page
     // 4. Merge results using handlePaginationResponse
     // 5. Update state with merged list and new pagination info
+    //!Solution: Implement check for last page
+  if (state.currentPage >= state.lastPage) return;
+
+  final nextPage = state.currentPage + 1;
+
+
+  final result = await _fetchRoomsUC(RoomParams(page: nextPage));
+
+  result.fold(
+    (left) => emit(state.copyWith(
+      //!Solution: Store error message and status
+      status: handleErrorResponse(left),
+      errorMessage: NetworkExceptions.getErrorMessage(left),
+    )),
+    (right) {
+      //!Solution: Merge results for pagination
+      final mergedRooms = handlePaginationResponse(
+        result: right.data,
+        currentList: state.rooms,
+        currentPage: nextPage,
+      );
+      emit(state.copyWith(
+        status: handleLoadedResponse(mergedRooms),
+        rooms: mergedRooms,
+        currentPage: nextPage,
+        lastPage: right.paginates?.lastPage ?? state.lastPage,
+      ));
+    },
+  );
   }
 }
 
@@ -352,6 +402,15 @@ class _RoomListPageState extends State<RoomListPage> {
 
     // TODO [Mid+]: Add scroll listener for infinite scroll
     // Use handleScrollListener to trigger LoadMoreRoomsEvent
+    //!Solution: Use handleScrollListener to trigger LoadMoreRoomsEvent
+  _bloc.state.scrollController.addListener(() {
+  handleScrollListener(
+    controller: _bloc.state.scrollController,
+    fun: () => _bloc.add(const LoadMoreRoomsEvent()),
+    currentPage: _bloc.state.currentPage,
+    lastPage: _bloc.state.lastPage,
+  );
+});
   }
 
   @override
@@ -368,6 +427,9 @@ class _RoomListPageState extends State<RoomListPage> {
         bloc: _bloc,
         // TODO [Mid+]: Add buildWhen to prevent unnecessary rebuilds
         // Only rebuild when status or rooms list changes
+          //!Solution: Use buildWhen to rebuild only when status or rooms change
+  buildWhen: (previous, current) =>
+      previous.status != current.status || previous.rooms != current.rooms,
         builder: (context, state) {
           switch (state.status) {
             case RequestState.idle:
@@ -431,6 +493,29 @@ class _RoomListPageState extends State<RoomListPage> {
 // 2. What problems does this cause?
 // 3. How would you refactor it? (describe the split, not full code)
 // ===========================================================================
+
+
+  //!Solution: Split into multiple focused BLoCs:
+
+// The `FetchAllDataBloc` is trying to do too much in one place—it handles user data, chat, banners,
+// analytics, wallet, app config, and more all in a single BLoC. 
+// This makes the code hard to maintain, difficult to test, and can cause unnecessary UI updates.
+//
+// Refactor: Split it into smaller, focused BLoCs like `UserBloc`, `ChatBloc`, `BannerBloc`, `ConfigBloc`, and `AnalyticsBloc`. 
+// For Example
+// User Feature:
+//   - Domain: User, Badge, Wallet entities + use cases
+//   - Data: Repositories, API/Data sources
+//   - Presentation: UserBloc/Cubit, UserPage
+//
+// Chat Feature:
+//   - Domain: Message, Channel + use cases
+//   - Data: Repositories, WebSocket
+//   - Presentation: ChatBloc/Cubit, ChatPage
+//
+
+
+// Use a simple coordinator if you need them to work together.
 
 class FetchAllDataBloc extends Bloc<dynamic, dynamic> {
   FetchAllDataBloc(
