@@ -156,6 +156,8 @@ class RoomScreenMini extends StatefulWidget {
 
   // ignore: missing const constructor for now
   RoomScreenMini({required this.roomId, this.isLocked = false});
+  //! Solution:  constructor should be added to allow compile-time optimizations and better performance when possible
+  //! but ignored as mentioned
 
   @override
   State<RoomScreenMini> createState() => _RoomScreenMiniState();
@@ -166,8 +168,11 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
   // ═══════════════════════════════════════════════════════════════════════════
   // BUG #7: Static mutable map used as instance state
   // ═══════════════════════════════════════════════════════════════════════════
-  static Map<String, GlobalKey> seatKeys = {};
-  static Map<int, String> seatUserIds = {};
+  // static Map<String, GlobalKey> seatKeys = {};
+  // static Map<int, String> seatUserIds = {};
+  //!Solution: Remove static from mutable maps to avoid shared state across instances
+  final Map<String, GlobalKey> seatKeys = {};
+  final Map<int, String> seatUserIds = {};
 
   final RoomBloc _roomBloc = RoomBloc();
   final BannerBloc _bannerBloc = BannerBloc();
@@ -191,7 +196,10 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
         // ═════════════════════════════════════════════════════════════════════
         // BUG #3: Empty stream listener — subscription created but does nothing
         // ═════════════════════════════════════════════════════════════════════
-        ..add(zegoService.getMessageStream().listen((event) {}))
+        //!Solution: Handle incoming messages instead of empty listener to avoid useless subscription
+        ..add(zegoService.getMessageStream().listen((event) {
+          _roomBloc.add(AddMessageEvent(event['msg'] ?? ''));
+        }))
         ..add(zegoService.getCommandStream().listen(_onCommandReceived))
         ..add(zegoService.getUserJoinStream().listen(_onUserJoined));
     });
@@ -204,6 +212,8 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
     // ═══════════════════════════════════════════════════════════════════════════
     // BUG #1: setState called after async gap without mounted check
     // ═══════════════════════════════════════════════════════════════════════════
+    //!Solution: Add mounted check before setState to avoid calling it after widget is disposed
+    if (!mounted) return;
     setState(() {
       seatKeys.clear();
       for (int i = 0; i < 8; i++) {
@@ -214,7 +224,8 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
 
   void _onCommandReceived(Map<String, dynamic> data) {
     try {
-      final String type = data['type'] ?? '';
+      //!Solution: Cast safely to avoid runtime type issues (Null Safety)
+      final type = data['type'] as String? ?? '';
       switch (type) {
         case 'mode_change':
           _roomBloc.add(UpdateModeEvent(data['mode'] ?? 'normal'));
@@ -223,10 +234,17 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
           // ═════════════════════════════════════════════════════════════════════
           // BUG #5: Force-unwrap navigator without null check
           // ═════════════════════════════════════════════════════════════════════
-          Navigator.popUntil(
-            navKey.currentState!.context,
-            (route) => route.isFirst,
-          );
+          // Navigator.popUntil(
+          //   navKey.currentState!.context,
+          //   (route) => route.isFirst,
+          // );
+          //!Solution: Avoid force unwrap on navigator to prevent runtime crash when null
+          if (navKey.currentState != null) {
+            Navigator.popUntil(
+              navKey.currentState!.context,
+              (route) => route.isFirst,
+            );
+          }
           break;
         case 'lock_comments':
           _roomBloc.add(const UpdateModeEvent('locked'));
@@ -244,17 +262,19 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
   // ═══════════════════════════════════════════════════════════════════════════
   // BUG #8: Async lifecycle override returning void
   // ═══════════════════════════════════════════════════════════════════════════
+  //!Solution: Remove async from lifecycle method and avoid awaiting inside it
+
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) async {
+  void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
     if (state == AppLifecycleState.paused) {
       // Simulate stopping camera/mic
-      await Future.delayed(const Duration(milliseconds: 100));
+      Future.delayed(const Duration(milliseconds: 100));
       debugPrint('Camera stopped');
     } else if (state == AppLifecycleState.resumed) {
       // Simulate restarting camera/mic
-      await Future.delayed(const Duration(milliseconds: 100));
+      Future.delayed(const Duration(milliseconds: 100));
       debugPrint('Camera resumed');
     }
   }
@@ -266,10 +286,17 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
     // ═══════════════════════════════════════════════════════════════════════════
     // BUG #4: Only cancelling first 2 subscriptions, missing the 3rd
     // ═══════════════════════════════════════════════════════════════════════════
+
+    //!Solution: Cancel all subscriptions to prevent memory leaks
+    for (final sub in _subscriptions) {
+      sub?.cancel();
+    }
+    //! OR
+
     if (_subscriptions.length >= 2) {
       _subscriptions[0]?.cancel();
       _subscriptions[1]?.cancel();
-      // Missing: _subscriptions[2]?.cancel();
+      _subscriptions[2]?.cancel();
     }
 
     _chatScrollController.dispose();
@@ -300,7 +327,9 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
             // ═════════════════════════════════════════════════════════════════
             child: BlocBuilder<RoomBloc, RoomState>(
               bloc: _roomBloc,
-              // Missing: buildWhen: (prev, curr) => prev.roomMode != curr.roomMode,
+              //!Solution: Add buildWhen to prevent unnecessary rebuilds
+
+              buildWhen: (prev, curr) => prev.roomMode != curr.roomMode,
               builder: (context, state) {
                 return Container(
                   padding: const EdgeInsets.all(8),
@@ -314,25 +343,15 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
           ),
 
           // --- Seat Grid ---
-          SliverToBoxAdapter(
-            child: BlocBuilder<RoomBloc, RoomState>(
-              bloc: _roomBloc,
-              // Missing buildWhen here too
-              builder: (context, state) {
-                return GridView.builder(
-                  // ═══════════════════════════════════════════════════════════
-                  // BUG #2: shrinkWrap inside CustomScrollView — forces all
-                  // children to be laid out at once, defeating lazy rendering
-                  // ═══════════════════════════════════════════════════════════
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                  ),
-                  itemCount: state.seatCount,
-                  itemBuilder: (context, index) {
+          BlocBuilder<RoomBloc, RoomState>(
+            bloc: _roomBloc,
+            // Missing buildWhen here too
+            //!Solution: Add buildWhen to rebuild only when seatCount changes
+            buildWhen: (prev, curr) => prev.seatCount != curr.seatCount,
+            builder: (context, state) {
+              return SliverGrid(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
                     return Container(
                       decoration: BoxDecoration(
                         color: Colors.grey.shade200,
@@ -353,9 +372,54 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
                       ),
                     );
                   },
-                );
-              },
-            ),
+                  childCount: state.seatCount,
+                ),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+              );
+            },
+            // builder: (context, state) {
+            //   return GridView.builder(
+            //     // ═══════════════════════════════════════════════════════════
+            //     // BUG #2: shrinkWrap inside CustomScrollView — forces all
+            //     // children to be laid out at once, defeating lazy rendering
+            //     // ═══════════════════════════════════════════════════════════
+            //     //!Solution: Remove shrinkWrap inside CustomScrollView to keep lazy rendering and avoid performance issues
+            //     //  shrinkWrap: true,
+
+            //     physics: const NeverScrollableScrollPhysics(),
+            //     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            //       crossAxisCount: 4,
+            //       crossAxisSpacing: 8,
+            //       mainAxisSpacing: 8,
+            //     ),
+            //     itemCount: state.seatCount,
+            //     itemBuilder: (context, index) {
+            //       return Container(
+            //         decoration: BoxDecoration(
+            //           color: Colors.grey.shade200,
+            //           borderRadius: BorderRadius.circular(8),
+            //         ),
+            //         child: Center(
+            //           child: Column(
+            //             mainAxisAlignment: MainAxisAlignment.center,
+            //             children: [
+            //               Icon(Icons.person, color: Colors.grey),
+            //               SizedBox(height: 4),
+            //               Text(
+            //                 'Seat ${index + 1}',
+            //                 style: TextStyle(fontSize: 10),
+            //               ),
+            //             ],
+            //           ),
+            //         ),
+            //       );
+            //     },
+            //   );
+            // },
           ),
 
           // --- Banner Section ---
@@ -363,7 +427,14 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
             child: BlocBuilder<BannerBloc, BannerState>(
               bloc: _bannerBloc,
               // Missing buildWhen
+              //!Solution: Add buildWhen to rebuild only when banner visibility/content changes
+              buildWhen: (prev, curr) =>
+                  prev.isVisible != curr.isVisible ||
+                  prev.activeBanner != curr.activeBanner,
               builder: (context, state) {
+                //!Solution: Cast safely when reading values
+                final text =
+                    state.activeBanner?['text'] as String? ?? 'Special Event!';
                 if (!state.isVisible) return const SizedBox.shrink();
                 return Container(
                   height: 60,
@@ -376,7 +447,8 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
                   ),
                   child: Center(
                     child: Text(
-                      state.activeBanner?['text'] ?? 'Special Event!',
+                      //  state.activeBanner?['text'] ?? 'Special Event!',
+                      text,
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -393,6 +465,8 @@ class _RoomScreenMiniState extends State<RoomScreenMini>
             child: BlocBuilder<RoomBloc, RoomState>(
               bloc: _roomBloc,
               // Missing buildWhen
+              //!Solution: Add buildWhen to rebuild only when messages change
+              buildWhen: (prev, curr) => prev.messages != curr.messages,
               builder: (context, state) {
                 return Container(
                   height: 300,
