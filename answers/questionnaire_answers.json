@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "generated_at": "2026-03-29T09:44:01.907Z",
+    "assessment_version": "1.0",
+    "company": "UTD Software"
+  },
+  "about_you": {
+    "full_name": "Eyad Khaled Mohamed Gad",
+    "email": "khaledeyad60@gmail.com",
+    "github_username": "Eyad003khaled",
+    "flutter_experience": "3-5",
+    "total_dev_experience": "5-8"
+  },
+  "skills_self_assessment": {
+    "bloc_flutter_bloc": 5,
+    "clean_architecture": 5,
+    "firebase": 5,
+    "cicd_devops": 4,
+    "testing": 4,
+    "realtime_websocket": 5,
+    "performance_devtools": 5
+  },
+  "technical_knowledge": {
+    "q8_complex_feature": "I built a Flutter feature that integrates with an ESP32-based IoT device to enable real-time ordering. Users can pre-configure four hardware buttons in the app, and pressing a button automatically orders the assigned item. The implementation required managing asynchronous communication, device connectivity, and reliable state synchronization between the app and hardware.",
+    "q9_stateful_vs_bloc": "I decide based on scope, complexity, and state-sharing requirements.\n\nStatefulWidget is suitable when the state is local to a single widget or small UI interactions (e.g., toggling a switch, animating a component) that don’t need to be shared elsewhere.\nBLoC (or any centralized state management) is used when the feature involves complex logic, asynchronous operations, or shared state across multiple screens (e.g., fetching data from an API, handling user sessions, or reacting to hardware events).",
+    "q10_code_output": "4\ntrue\nbec, in Dart lists are reference Type . this means list2 points to the same list in memory which is list1 (not a copy from it).\nso, adding 4 through list2 will also affect list1 and their length will be 4.\n\nidentical checks if two references point to the exact same object and they are referencing to the same which results to true",
+    "q11_bloc_bug": "The issue is that state doesn’t update immediately after emit. So when you call emit(state + 1) twice, both emissions use the old state, not the incremented one.\n\nFix: calculate the new state yourself or emit the final value directly:\n\nemit(state + 2); // adds 2 at once\n\nOr, if we want sequential updates:\n\nfinal newState = state + 1;\nemit(newState);\nemit(newState + 1);\n\n in BLoC, state only updates after the handler finishes",
+    "q12_const_sizedbox": "const SizedBox() vs SizedBox() comes down to compile-time vs runtime instantiation:\n\nconst SizedBox()\nThe widget is created at compile-time and reused whenever the same const instance appears.\nFlutter can skip rebuilding it because it knows the widget is immutable and identical across rebuilds.\nThis reduces memory usage and avoids unnecessary build() calls.\nSizedBox() (without const)\nThe widget is created at runtime every time the build method runs.\nEven if nothing changed, Flutter sees it as a new instance, which may trigger unnecessary rebuilds of child widgets.",
+    "q13_friday_bug": "Step 1: assess the bug — figure out how critical it is and who it affects.\nStep 2: Alert the team and stakeholders so everyone knows the situation.\nStep 3: Reproduce the issue in staging to understand the root cause safely.\nStep 4: Apply a hotfix or rollback if needed, then test thoroughly.\nStep 5: Deploy the fix and monitor production to ensure it’s resolved.\nStep 6: Document the incident and share lessons to prevent it from happening again."
+  },
+  "how_you_work": {
+    "q14_architecture_disagreement": "Situation: While implementing a new feature, I noticed the proposed architecture differed from the existing project structure.\n\nMy perspective: I recommended sticking to the established approach because having a consistent architecture across the app ensures maintainability, scalability, and easier debugging. It also makes future improvements simpler, and new developers can quickly understand the project — once they grasp one feature, they can navigate the rest.\n\nOutcome: The team agreed to follow the existing structure, which kept the codebase consistent, made onboarding easier, and allowed us to enhance features and fix bugs more efficiently.",
+    "q15_staying_current": "I stay current with Flutter and Dart by following multiple channels. I regularly read the official Flutter and Dart release notes, check the Flutter Dev blog, and monitor GitHub discussions for best practices. I also participate in Flutter communities like GDG , follow tech talks and YouTube tutorials, and experiment with new features in small side projects to understand them hands-on. This combination of reading, community engagement, and practical experimentation helps me keep up-to-date and write modern, efficient Flutter code.",
+    "q16_code_review": "My approach to code review focuses on clarity, simplicity, and consistency with the planned architecture. I look for code that meets the intended functionality while being clean, readable, and easy to maintain, avoiding unnecessary complexity. A good PR follows the established architecture, implements the feature efficiently, has clear commit messages, and includes well-tested, understandable code that anyone on the team can pick up and extend in the future.",
+    "q17_ai_usage": "I used AI tools, specifically ChatGPT, to help with a few aspects of the assessment. For example, I used it to analyze long code files (+500 lines), which sped up understanding and debugging. I also leveraged it to generate clear, well-organized explanations and summaries. Additionally, when there were two competing approaches or solutions, I used it to evaluate which option was better and understand the reasoning behind each choice. Overall, it helped me work more efficiently and make more informed decisions."
+  },
+  "submissions": {
+    "q18_video_url": "https://www.loom.com/share/3cb5fcf80fb04478971afdcaf8fc796d",
+    "q19_github_repo_url": "https://github.com/Eyad003khaled/flutter-developer-assessment-solution",
+    "q20_anything_else": null
+  }
+}
