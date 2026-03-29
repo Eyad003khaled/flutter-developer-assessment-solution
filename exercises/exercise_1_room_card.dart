@@ -25,6 +25,8 @@
 // - Consider edge cases (null data, long text, missing images)
 // =============================================================================
 
+// ignore_for_file: unused_element
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -174,8 +176,8 @@ class RoomCard extends StatelessWidget {
             //   ),
             // ),
             SizedBox(
-              width: 80.w,
-              height: 80.h,
+              // width: 80.w,
+              // height: 80.h,
               // decoration: BoxDecoration(
               //   borderRadius: BorderRadius.circular(8),
               //   image: DecorationImage(
@@ -309,7 +311,10 @@ class _VisitorCount extends StatelessWidget {
   // BUG: Missing const, missing key
   //  _VisitorCount({required this.count});
   //! Solution: Add const constructor for better performance and immutability
-  const _VisitorCount({required this.count});
+  const _VisitorCount({
+    super.key,
+    required this.count,
+  });
   String formatCount(int count) {
     if (count >= 1000000) {
       return '${(count / 1000000).toStringAsFixed(1)}M';

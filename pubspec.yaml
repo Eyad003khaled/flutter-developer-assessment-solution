@@ -16,6 +16,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   cached_network_image: ^3.4.1
   flutter_svg: ^2.1.0
+  device_preview: ^1.2.0 
 
 
 

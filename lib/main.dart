@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 void main() {
   runApp(const AssessmentApp());
@@ -9,14 +10,16 @@ class AssessmentApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'UTD Software — Flutter Assessment',
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF32e5ac),
-        useMaterial3: true,
-      ),
-      home: const AssessmentHomePage(),
-    );
+    return ScreenUtilInit(builder: (context, child) {
+      return MaterialApp(
+        title: 'UTD Software — Flutter Assessment',
+        theme: ThemeData(
+          colorSchemeSeed: const Color(0xFF32e5ac),
+          useMaterial3: true,
+        ),
+        home: const AssessmentHomePage(),
+      );
+    });
   }
 }
 
