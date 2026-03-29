@@ -1,137 +1,152 @@
-# Flutter Developer Assessment — UTD Software
+# Flutter Developer Assessment Solution
 
-Welcome to the UTD Software Flutter Developer Technical Assessment.
+## 👨‍💻 Developer Information
 
-This assessment evaluates your ability to work on a **production-grade Flutter codebase** — the kind of challenges you'll face daily on our team.
+**Developed and Submitted by:**
+
+| Field | Details |
+|-------|---------|
+| **Name** | Eyad Khaled |
+| **Title** | Senior Flutter Developer |
+| **Phone** | +201024537220 |
+| **Email** | khaledeyad60@gmail.com |
+| **LinkedIn** | [www.linkedin.com/in/eyad-khaled](https://www.linkedin.com/in/eyad-khaled) |
 
 ---
 
-## Rules
+## 📁 Project Structure
 
-- **AI usage is allowed.** Use ChatGPT, Copilot, Claude — whatever you want. However, several exercises are designed to require **human judgment, visual inspection, and personal experience** that AI cannot provide. We can tell the difference between a thoughtful answer and a generic AI response.
-- **Time limit:** ~4 hours recommended across all exercises. No strict enforcement.
-- **Partial submissions are welcome.** Quality over quantity — 5 excellent exercises beat 8 rushed ones.
-- **Be honest.** Question 17 in the questionnaire asks how you used AI. There's no penalty — we value transparency.
+```
+flutter-developer-assessment-solution/
+├── lib/           # Flutter application source code
+├── exercises/     # Assessment exercise files
+├── answers/       # Submitted answers, reports, screenshots
+└── questionnaire/ # Interactive questionnaire
+```
 
 ---
 
-## How to Complete This Assessment
+## 🎯 Exercises Overview
 
-### Step 1: Fork this repository
-Click **"Fork"** on GitHub to create your own copy.
+| # | Exercise | Type | Focus |
+|---|----------|------|-------|
+| 1 | Room Card Widget | Code | UI Widget Development & Debugging |
+| 2 | Paginated Room List | Code | BLoC State Management & Pagination |
+| 3 | Room Screen Debugging | Code | Multi-Bug Debugging & Problem Solving |
+| 4 | DI Service Refactor | Code + Written | Dependency Injection Patterns |
+| 5 | Performance Audit | Code + Written | Performance Optimization & Analysis |
+| 6 | Video Walkthrough | Video | Live Debugging Demonstration |
+| 7 | Visual Bug Hunt | Run & Report | Manual QA Testing & Bug Detection |
+| 8 | Product Decisions | Written | Architectural Decision Making |
 
-### Step 2: Clone and set up
+---
+
+## 🖼️ Exercises Demo Table (Screenshots & Videos)
+
+| Exercise | Demo Screenshot | Demo Video |
+|----------|----------------|------------|
+| 1 | <img src="answers/screenshots/exercise_1.jpg" width="150"/> | — |
+| 2 | — | [Watch Video](answers/screenshots/exercise_2.mp4) |
+| 3 | <img src="answers/screenshots/exercise_3.jpg" width="150"/> | — |
+| 6 | — | [Watch Video](https://www.loom.com/share/3cb5fcf80fb04478971afdcaf8fc796d) |
+
+
+
+---
+
+## 📂 Detailed Directory Structure
+
+### `exercises/` — Assessment Exercise Files
+```
+exercises/
+├── exercise_1_room_card.dart        # Exercise 1: Fix & improve Room Card widget UI
+├── exercise_2_room_list_bloc.dart   # Exercise 2: Fix BLoC pagination bugs
+├── exercise_3_room_screen_mini.dart # Exercise 3: Find and fix 8 intentional bugs
+├── exercise_4_di_snippet.dart       # Exercise 4: Refactor DI anti-patterns
+├── exercise_5_performance_analysis.dart  # Exercise 5: Performance audit analysis
+├── exercise_6_video_walkthrough.md  # Exercise 6: Video walkthrough instructions
+├── exercise_7_live_app_interaction.md    # Exercise 7: Visual bug hunt guide
+└── exercise_8_product_decisions.md  # Exercise 8: Architecture decision scenarios
+```
+**Description:** Contains 8 practical Flutter development exercises covering:
+- UI widget development and debugging
+- State management with BLoC pattern
+- Code quality and performance optimization
+- Dependency injection patterns
+- Product decision-making and architecture
+
+---
+
+### `answers/` — Assessment Submission Files
+```
+answers/
+├── questionnaire_answers.json       # Questionnaire responses (JSON format)
+├── scenario_1_offline_chat.md       # Architecture decision: Offline chat feature
+├── scenario_2_refactor_decision.md  # Architecture decision: Code refactoring strategy
+├── scenario_3_migration_proposal.md # Architecture decision: Migration proposal
+├── visual_bugs_report.md            # Report of visual bugs found during testing
+└── screenshots/                     # Supporting screenshots of bugs
+```
+**Description:** Contains all assessment answers and submissions:
+- Structured questionnaire responses
+- Architecture and design decision documents
+- Bug reports with evidence
+
+---
+
+## � Notes Recognized While Working
+
+### Exercise 1: Widget Organization
+**Issue:** Reusable widgets are defined within the same file for reference purposes.
+**Recommendation:** Extract reusable widgets into separate dedicated files to improve modularity, maintainability, and code reusability across the project.
+
+---
+
+### Exercise 2: State Management & Scroll Position
+**Issue #1 - Import Conflict:** State class definition exists in both `dartz` and `flutter` packages, causing ambiguity when extending `State<RoomListPage>`.
+
+**Issue #2 - Scroll Position Reset:** Pagination was resetting scroll position due to:
+- **Stale state values:** The scroll listener read `currentPage` and `lastPage` values cached from `initState`, not the latest updated values.
+- **ScrollController preservation:** The `copyWith` method had parameter shadowing, passing `null` instead of preserving the existing controller, causing scroll position loss on every state update.
+
+**Solution:** Ensure listeners read fresh state values and properly preserve the ScrollController reference during state transitions.
+
+---
+
+### Exercise 3: Shrinkwrap Layout Constraint
+**Issue:** Using `shrinkWrap: true` in the seat grid caused layout conflicts. Removing it triggered `FlutterError: Vertical viewport was given unbounded height.`
+
+**Solution:** The constraint error occurs because the grid requires a bounded height from its parent. Resolution involves wrapping with `Expanded` or `SizedBox` to provide explicit height constraints while maintaining proper layout behavior.
+
+---
+
+### Exercise 4: Dependency Injection Layer
+**Issue:** Application crashes on execution due to the DI layer using a mock class (`_MockDI`) containing hardcoded exceptions instead of functional implementation.
+
+**Solution:** Replace mock implementation with actual service locator logic or proper dependency injection configuration to enable normal application flow.
+
+---
+
+## �🚀 Quick Start
+
+### Prerequisites
+- Flutter SDK installed
+- Dart SDK (included with Flutter)
+- VS Code, Android Studio, or IntelliJ IDEA
+
+### Setup & Run
 ```bash
-git clone https://github.com/YOUR_USERNAME/flutter-developer-assessment.git
-cd flutter-developer-assessment
+# Navigate to project directory
+cd flutter-developer-assessment-solution
+
+# Install dependencies
 flutter pub get
-flutter run  # Verify the app runs
+
+# Run the application
+flutter run
 ```
 
-### Step 3: Complete the exercises
-All exercises are in the `exercises/` directory. There are **8 exercises** in 3 categories:
 
-| # | Exercise | Type | Time | Points |
-|---|----------|------|------|--------|
-| 1 | Room Card Widget | Code — Fix & improve a broken UI widget | 30 min | 20 |
-| 2 | Paginated Room List | Code — Fix BLoC bugs, implement pagination | 40 min | 20 |
-| 3 | Room Screen Debugging | Code — Find and fix 8 intentional bugs | 30 min | 20 |
-| 4 | DI Service Refactor | Code + Written — Fix DI anti-patterns | 20 min | 20 |
-| 5 | Performance Audit | Code + Written — Identify rebuild issues | 30 min | 20 |
-| 6 | Video Walkthrough | Video — Record yourself debugging live | 20 min | 20 |
-| 7 | Visual Bug Hunt | Run & Report — Find bugs by running the app | 25 min | 20 |
-| 8 | Product Decisions | Written — Architecture trade-off scenarios | 30 min | 20 |
 
-**Exercises 6-8 are AI-resistant** — they require running the app, recording video, and making product judgment calls that AI cannot do well.
-
-### Step 4: Complete the questionnaire
-1. Open `questionnaire/index.html` in your browser
-2. Fill out all sections (20 questions)
-3. Click **"Generate Answers File"** — downloads `questionnaire_answers.json`
-4. Move it to the `answers/` directory
-
-### Step 5: Commit and push
-```bash
-git add .
-git commit -m "Complete assessment"
-git push origin main
-```
-
-### Step 6: Submit
-Reply to the assessment email with your **forked repo URL**.
-
-If your repo is private, add the GitHub username provided by your hiring contact as a collaborator.
-
----
-
-## Repository Structure
-
-```
-flutter-developer-assessment/
-├── README.md                      <- You are here
-├── exercises/                     <- All 8 exercises (edit these files)
-│   ├── exercise_1_room_card.dart
-│   ├── exercise_2_room_list_bloc.dart
-│   ├── exercise_3_room_screen_mini.dart
-│   ├── exercise_4_di_snippet.dart
-│   ├── exercise_5_performance_analysis.dart
-│   ├── exercise_6_video_walkthrough.md
-│   ├── exercise_7_live_app_interaction.md
-│   └── exercise_8_product_decisions.md
-├── questionnaire/
-│   └── index.html                 <- Open in browser, generates JSON
-├── answers/                       <- Put your generated answers + written files here
-│   ├── questionnaire_answers.json <- Generated by the HTML form
-│   ├── visual_bugs_report.md      <- Exercise 7 output
-│   ├── scenario_1_offline_chat.md <- Exercise 8 output
-│   ├── scenario_2_refactor_decision.md
-│   └── scenario_3_migration_proposal.md
-├── lib/main.dart                  <- App entry point (run with flutter run)
-└── pubspec.yaml
-```
-
----
-
-## What We Evaluate
-
-| Dimension | What We Look For |
-|-----------|-----------------|
-| **Code Correctness** | Does it work? Are bugs properly found and fixed? |
-| **Code Quality** | Naming, structure, error handling, const usage |
-| **Architecture Thinking** | Separation of concerns, DI decisions, BLoC design |
-| **Performance Awareness** | Rebuild optimization, buildWhen, lazy loading |
-| **Debugging Skills** | DevTools usage, systematic approach (Exercise 6) |
-| **Product Judgment** | Trade-off analysis, realistic plans (Exercise 8) |
-| **Communication** | Clear explanations, well-structured written answers |
-
----
-
-## FAQ
-
-**Q: Do I need to complete all 8 exercises?**
-No. Complete as many as you can with high quality. We'd rather see 5 excellent exercises than 8 rushed ones.
-
-**Q: Can I use AI tools?**
-Yes. We encourage using whatever tools you'd use in your daily work. However, exercises 6-8 specifically require human judgment — video recording, running the app, and product trade-off decisions that AI handles poorly.
-
-**Q: What Flutter version should I use?**
-Flutter 3.x+ and Dart 3.x+. Run `flutter --version` to verify.
-
-**Q: Can I add packages?**
-Yes. Add whatever you need to `pubspec.yaml`. Just make sure `flutter pub get` works.
-
-**Q: What if I find a bug in the assessment itself?**
-Great eye! Note it in your README or questionnaire — we'll consider it a strong signal.
-
-**Q: How long do I have?**
-5 business days from when you receive the assessment email.
-
----
-
-## Questions?
-
-If anything is unclear, email your hiring contact. We want you to succeed.
-
-Good luck!
-
-— **UTD Software Engineering Team**
+*Flutter Developer Assessment Solution | March 2026*
+*Developed by: Eyad Khaled, Senior Flutter Developer*
